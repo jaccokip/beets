@@ -1,6 +1,6 @@
 # Beets configuration --------------------------------------------------------
 
-library:    ~/.config/beets/library.blb
+library:    ~/.config/beets/music_lib.blb
 directory:  /media/jacco/DATA/data/music/
 
 import:
@@ -20,7 +20,7 @@ import:
     # Controls interrupted imports. “Yes” always resumed; “no” resuming is disabled; “ask” prompt user
     resume: ask
     # controlling whether imported directories are recorded and whether these recorded directories are skipped. This corresponds to the -i flag to beet import
-    incremental: yes
+    incremental: no
 
     # Either yes or no (default), controlling whether existing metadata is discarded when a match is applied. This corresponds to the --from_scratch flag to beet import
     from_scratch: no
@@ -52,14 +52,26 @@ ignore: [".*", "*~", "System Volume Information"]
 
 # Paths ----------------------------------------------------------------------
 
-# Paths and filenames for music files
-# relative to music directory
+## Paths and filenames for music files
+## relative to music directory
+## %aunique{}/%if{$multidisc,Disc $disc/}
 paths:
-    default: %asciify{$genre}/%asciify{$albumartist}/%asciify{$album}%aunique{}/$track %asciify{$title}
-    singleton: Non-Album/%asciify{$genre}%asciify{$artist}/%asciify{$title}
-    comp: /Compilations/%asciify{$genre}/%asciify{$album}%aunique{}/$track %asciify{$title}
+    default: %asciify{$genre}/%asciify{%title{$albumartist}}/%asciify{%title{$album}}%aunique{}/%asciify{%title{$title}}
+    singleton: Non-Album/%asciify{$genre}%asciify{%title{$artist}}/%asciify{%title{$title}}
+    comp: /Compilations/%asciify{$genre}/%asciify{%title{$album}}%aunique{}/%asciify{%title{$title}}
 
+#paths:
+#  # Albums/A/ASCI Artist Name, The/[YEAR] ASCI Album Name, The [EP]/01 - Track Name.mp3
+#  default: 'Albums/%bucket{%upper{%left{%the{%asciify{$albumartist}},1}}}/%the{%asciify{$albumartist}}/[%if{$year,$year,0000}] %asciify{$album} %aunique{albumartist album year, albumtype label catalognum albumdisambig}/%if{$multidisc,$disc-}$track - %asciify{$title}'
+#  # Singles/ASCII Artist Name, The - Track Name.mp3
+#  singleton: 'Singles/%the{%asciify{$artist}} - %asciify{$title}'
+#  # Compilations/[YEAR] ASCI Compilation Name, The/01-01 - Track Name.mp3
+#  comp: 'Compilations/[%if{$year,$year,0000}] %the{%asciify{$album}%if{%aunique, %aunique{albumartist album year, albumtype label catalognum albumdisambig}}}/%if{$multidisc,$disc-}$track - %asciify{$title}'
+#  # Sountracks/[YEAR] ASCI Soundtrack Name, The/01 - Track Name.mp3
+#  albumtype:soundtrack: 'Soundtracks/[%if{$year,$year,0000}] %the{%asciify{$album}%if{%aunique, %aunique{albumartist album year, albumtype label catalognum albumdisambig}}}/%if{$multidisc,$disk-}$track - %asciify{$title}'    
+#    
 # replace special characters in generated filenames
+
 replace:
     '[\\/]': _
     '^\.': _
@@ -67,6 +79,8 @@ replace:
     '[<>:"\?\*\|]': _
     '\.$': _
     '\s+$': ''
+    '[\(\)]': ''
+    '\ ': _
 
 path_sep_replace: _
 
@@ -148,11 +162,16 @@ plugins: [
     lastgenre,
     scrub,
     mbsync,
-    mpdupdate,
+    #mpdupdate,
     #mpdstats,
     missing,
     replaygain,
-    duplicates
+    duplicates,
+    play,
+    info
+    # bucket,
+    # inline,
+    # the
 ]
 pluginpath: []
 
@@ -207,18 +226,18 @@ scrub:
     auto: yes
 
 # required for mpdstats
-mpd:
-    host: localhost
-    port: 6600
-    password:  # none
+#mpd:
+#    host: localhost
+#    port: 6600
+#    password:  # none
 
-mpdstats:
-    rating: False
+#mpdstats:
+#    rating: False
     # two ratings are calculated:
     # "rolling" based on recent development
     # "stable" based on all-time development
     # rating mix 0.0 is all "rolling", 1.0 is all "stable"
-    rating_mix: 0.75
+#    rating_mix: 0.75
 
 missing:
     format: $albumartist - $album - $track - $title
@@ -226,5 +245,52 @@ missing:
     total: no
 
 duplicates:
-    album: yes
-    checksum: no  # expensive
+    album: no
+#    checksum: no  # expensive
+
+play:
+    # command: /usr/bin/command --option1 --option2 some_other_option
+    command: /usr/bin/vlc
+    # command: /usr/bin/totem
+
+# hoort bij inline plugin, tbv create "disc N" directories for multi-disc albums
+# uitgezet omdat file wordt gerenaamd ipv folder 
+    #item_field:
+#         multidisc: 1 if disctotal > 1 else 0
+# Inline plugin multidisc template
+#item_fields:
+#  multidisc: 1 if disctotal > 1 else 0
+# 
+## Collects all special characters into single bucket
+#bucket:
+#  bucket_alpha:
+#    - _
+#    - A
+#    - B
+#    - C
+#    - D
+#    - E
+#    - F
+#    - G
+#    - H
+#    - I
+#    - J
+#    - K
+#    - L
+#    - M
+#    - N
+#    - O
+#    - P
+#    - Q
+#    - R
+#    - S
+#    - T
+#    - U
+#    - V
+#    - W
+#    - X
+#    - Y
+#    - Z
+#  bucket_alpha_regex:
+#    '_': ^[^A-Z]
+#
